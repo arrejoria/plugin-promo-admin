@@ -1,0 +1,24 @@
+/**
+ * All of the CSS for your public-facing functionality should be
+ * included in this file.
+ */
+
+ .prm-admin form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+ }
+
+ .prm-admin form p {
+    font-weight: 700;
+    font-size: 1rem;
+    font-family: 'Roboto';
+ }
+ .prm-admin form input[type=submit] {
+    background-color: #fff;
+    border: none;
+    color: #8d8d8d;
+    font-weight: 600;
+    text-transform: uppercase;
+    width: 100%;
+ }
