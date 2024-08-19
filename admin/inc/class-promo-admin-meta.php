@@ -24,14 +24,17 @@
 class Promo_Admin_Meta
 {
     private $mbx_array;
-    private $prm_form;
-    private $db_handler;
+    private $class_gfuncs;
+    private $class_db_handler;
+    private $class_helpers;
     // Constructor
     public function __construct()
     {
         $this->mbx_array = array();
-        $this->prm_form = array();
-        $this->prm_form = new DB_Handler();
+        // $this->prm_form = array();
+        $this->class_db_handler = new DB_Handler();
+        $this->class_gfuncs = new Promo_Admin_Gravity_Funcs();
+        $this->class_helpers = new Promo_Admin_Helpers();
     }
 
     public function register_meta_actions()
@@ -73,8 +76,6 @@ class Promo_Admin_Meta
 
         $form_id = get_post_meta($post_id, 'prm-formid', true);
         $page_slug = get_post_meta($post_id, 'prm-template-slug', true);
-        $page_slug = get_post_meta($post_id, 'prm-template-slug', true);
-        $this->prm_form = $this->get_promo_form($post_id);
 
 ?>
 
@@ -102,7 +103,7 @@ class Promo_Admin_Meta
                 <div class="space-y-2">
                     <div class="mb-2 border rounded p-1">
                         <label for="tempName" class="block text-[1rem] font-bold text-gray-500">Slug de la plantilla:</label>
-                        <input class="w-full" type="text" name="prm-template-slug" placeholder="Ingresar slug de la pagina" id="tempName" value="<?= esc_attr($page_slug); ?>" required>
+                        <input class="w-full" type="text" name="prm-template-slug" placeholder="ej. promo-page-slug" id="tempName" value="<?= esc_attr($page_slug); ?>" required>
                         <small class="block text-sm text-gray-400 pt-2">Slug de la pagina donde se mostrará la promoción.</small>
                     </div>
                 </div>
@@ -110,10 +111,10 @@ class Promo_Admin_Meta
             <!-- TEMPLATE SECTION END -->
 
             <!-- FORM SECTION START -->
-            <div class="flex flex-col bg-gray-50 xs:flex-[1_1_50%]  sm:flex-[1_1_90%] sm:grow px-2">
-                <div class="flex justify-between items-center">
+            <div class="flex flex-col bg-gray-50 xs:flex-[1_1_100%]  sm:flex-[1_1_90%] sm:grow px-2">
+                <div class="flex xs:flex-col sm:flex-row justify-between items-center">
                     <h2 class="!font-bold !text-[1.2rem] font-montserrat text-gray-500">Configuración del formulario:</h2>
-                    <button type="submit" name="reset-meta" value="1" class="bg-slate-400 px-4 h-8 py-1 text-white font-semibold">Resetear clases del formulario</button>
+                    <button type="submit" name="reset-meta" value="1" class="bg-slate-400 px-4 py-2 text-white font-semibold text-wrap">Resetear estilos del formulario</button>
                 </div>
                 <hr class="border-separate border border-gray-600 my-2">
 
@@ -123,18 +124,22 @@ class Promo_Admin_Meta
                     </div>
                     <div class="flex flex-wrap justify-between px-10 gap-5">
                         <?php
-                        $form = $this->prm_form;    // array($labels, $fields)
-                        $fields = $form['fields'];
+                        $form = $this->class_gfuncs->get_promo_form($post_id);    // array($labels, $fields)
+                        if(empty($form)) return;
 
+                        $fields = $form['fields'];
                         $prm_inp_labels = get_post_meta($post_id, 'prm-input-label', true);
                         $prm_inp_class = get_post_meta($post_id, 'prm-input-class', true); // return un array vacio
+
                         foreach ($fields as $label => $id):
                         ?>
-                            <?php if (!empty($prm_inp_class) && $prm_inp_class !== 'reset'): ?>
+                            <?php if (!empty($prm_inp_class[$id]) && $prm_inp_class !== 'reset' ): ?>
                                 <div class="<?= esc_attr($prm_inp_class[$id]) ?> border border-1 border-slate-400 p-2 rounded">
+                                    <!-- meta values -->
                                     <small class="block bg-gray-200 px-2 py-1">default: class="w-auto max-w-[45%]"</small>
                                     <input type="text" name="prm-input-class[<?= $id ?>]" id="" class=" w-full !text-gray-500 text-[10px] !h1-2 !min-h-2" value="<?= esc_attr($prm_inp_class[$id]) ?>" placeholder="Insertar las clases que utilizara este campo">
                                 <?php else: ?>
+                                    <!-- default values -->
                                     <div class="w-auto max-w-[45%] border border-1 border-slate-400 p-2 rounded">
                                         <small class="block bg-gray-200 px-2 py-1">default: class="w-auto max-w-[45%]"</small>
                                         <input type="text" name="prm-input-class[<?= $id ?>]" id="" class=" w-full !text-gray-500 text-[10px] !h1-2 !min-h-2" value="" placeholder="Insertar las clases que utilizara este campo">
@@ -203,38 +208,7 @@ class Promo_Admin_Meta
         public function prm_admin_render_promo_form() {}
 
 
-        /**
-         * Localizar el formulario en gravity form y devolver un array con los datos preparados para utilizarlos en las demas funciones que dependan de sus campos.
-         *  
-         * @param   int        $post_id            identificador del post para obtener el form_id value con meta key 'prm-formid'.
-         * @return  array      $form               Un array preparado que contiene los datos necesario del formulario para la promocion. 
-         */
-        public function get_promo_form($post_id)
-        {
 
-            $form_id = get_post_meta($post_id, 'prm-formid', true);
-
-            if (!class_exists('GFCommon')) {
-                echo '<div class=""><p class="!text-2xl text-red-600 text-center p-2 border border-red-700 bg-red-100">Este plugin necesita de que Gravity Form esté activado en el sitio.</p></div>';
-                wp_die();
-            }
-            try {
-                if (!GFAPI::form_id_exists($form_id)) throw new Exception('Verifica que el formulario con este ID esté creado o sea correcto.');
-
-                $form_fields = GFAPI::get_form($form_id)['fields'];
-                $form = array();
-                foreach ($form_fields as $field) {
-                    $form['labels'][$field['label']] = $field['label'];
-                    $form['fields'][$field['adminLabel']]  = $field['id'];
-                }
-
-                // Asignar todos los datos del formulario a la propiedad prm_form
-                return $form;
-            } catch (Exception $e) {
-                // Manejar la excepción capturada
-                echo '<div class="flex place-items-center justify-center h-20 border border-gray-700 bg-gray-200 max-w-md m-auto"><p class="!text-[1rem] text-gray-600 text-center p-2 ">' .  $e->getMessage() . '</p></div>';
-            }
-        }
 
 
         public function insert_promo_data_table() {}

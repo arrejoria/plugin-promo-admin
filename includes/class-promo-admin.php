@@ -119,6 +119,21 @@ class Promo_Admin
 		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-promo-db-handler.php';
 
 		/**
+		 * Class responsable de manejar toda relacion entre la base de datos y el plugin
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-promo-gravity-functions.php';
+
+		/**
+		 * Class responsable de manejar toda relacion entre la base de datos y el plugin
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-promo-admin-helpers.php';
+
+
+		/**
+		 * Class responsable de manejar toda relacion entre la base de datos y el plugin
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-promo-admin-ajax.php';
+		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-promo-admin-admin.php';
@@ -176,7 +191,7 @@ class Promo_Admin
 		// Meta actions y filters
 		$this->loader->add_action('init', $admin_meta, 'register_meta_actions');
 		// Agregar los metaboxes
-		$admin_meta->prm_admin_add_metabox('prm_admin_promo_config','Configuración de la promoción:', 'mbx_promo_config_render', 'prm_admin', 'normal','high');
+		$admin_meta->prm_admin_add_metabox('prm_admin_promo_config', 'Configuración de la promoción:', 'mbx_promo_config_render', 'prm_admin', 'normal', 'high');
 	}
 
 	/**
